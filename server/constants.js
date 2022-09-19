@@ -1,5 +1,4 @@
-const frameRate = 1;
-// const frameRate = 10;
+const frameRate = 10;
 
 const gridSize = 20;
 
