@@ -1,4 +1,4 @@
-const socket = io('https://multiplayer---snake.herokuapp.com/', {
+const socket = io('https://multiplayer---snake.herokuapp.com', {
     widthCredentials: false,
 });
 
