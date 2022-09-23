@@ -8,19 +8,14 @@
     <title>Snake</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-    <style>
-        #gameScreen
-        {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
     <script defer type="module" src="main.js"></script>
+    <script defer src="https://kit.fontawesome.com/22dad4dcbd.js" crossorigin="anonymous"></script>
 </head>
-<body>
+<body>    
     <main class="vh-100 container d-flex justify-content-center align-items-center">
-
         <div id="initialScreen" class="h-100">
             <div class="d-flex flex-column align-items-center justify-content-center h-100">
                 <h1>Multiplayer Snake</h1>
@@ -39,8 +34,22 @@
 
         <div class="h-100" id="gameScreen">
             <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                <h5 id="playerNumber"></h5>
                 <h1 id="gameCodeTitle">Your game code is: <span id="gameCodeSpan"></span></h1>
                 <canvas id="canvas"></canvas>
+            </div>
+        </div>
+
+        <div id="popupOuter">
+            <div id="popupInner">
+                <h5 class="text-center" id="winnerText"></h5>
+                <p class="text-center mb-0">Do you want to play again?</p>
+
+                <ul class="list-group list-group-flush text-center my-3" id="playAgainList">
+                </ul>
+
+                <div class="text-center" id="playAgainButtonsDiv">
+                </div>
             </div>
         </div>
     </main>

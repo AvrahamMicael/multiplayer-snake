@@ -17,6 +17,7 @@ const createGameState = () => ({
                 { x: 2, y: 10 },
                 { x: 3, y: 10 },
             ],
+            playAgain: false,
         },
         {
             pos: {
@@ -32,6 +33,7 @@ const createGameState = () => ({
                 { x: 2, y: 5 },
                 { x: 3, y: 5 },
             ],
+            playAgain: false,
         },
     ],
     food: {},
@@ -65,6 +67,10 @@ const randomFood = state => {
 };
 
 const gameLoop = state => {
+    const stateOnGameOver = winner => ({
+        winner,
+        playersQty: state.players.length,
+    });
     const playerOne = state.players[0];
     const playerTwo = state.players[1];
 
@@ -79,14 +85,14 @@ const gameLoop = state => {
     || playerOne.pos.y < 0
     || playerOne.pos.y > gridSize)
     {
-        return 2;
+        return stateOnGameOver(2);
     }
     if(playerTwo.pos.x < 0
     || playerTwo.pos.x > gridSize
     || playerTwo.pos.y < 0
     || playerTwo.pos.y > gridSize)
     {
-        return 1;
+        return stateOnGameOver(1);
     }
 
     if(state.food.x == playerOne.pos.x
@@ -114,7 +120,7 @@ const gameLoop = state => {
             if(snake1Cell.x == playerOne.pos.x
             && snake1Cell.y == playerOne.pos.y)
             {
-                return 2;
+                return stateOnGameOver(2);
             }
         }
         for(let snake2Cell of playerTwo.snake)
@@ -122,7 +128,7 @@ const gameLoop = state => {
             if(snake2Cell.x == playerOne.pos.x
             && snake2Cell.y == playerOne.pos.y)
             {
-                return 2;
+                return stateOnGameOver(2);
             }
         }
     }
@@ -134,7 +140,7 @@ const gameLoop = state => {
             if(snake2Cell.x == playerTwo.pos.x
             && snake2Cell.y == playerTwo.pos.y)
             {
-                return 1;
+                return stateOnGameOver(1);
             }
         }
         for(let snake1Cell of playerOne.snake)
@@ -142,7 +148,7 @@ const gameLoop = state => {
             if(snake1Cell.x == playerTwo.pos.x
             && snake1Cell.y == playerTwo.pos.y)
             {
-                return 1;
+                return stateOnGameOver(1);
             }
         }
     }
@@ -195,7 +201,7 @@ const handleKeyDown = (key, client, states, clientRooms) => {
     const vel = getUpdatedVelocity(key);
     if(vel)
     {
-        states[roomName].players[client.number - 1].vel = vel; //
+        states[roomName].players[client.number - 1].vel = vel;
     }
 };
 
@@ -244,10 +250,55 @@ const handleJoinGame = (gameCode, client, io, clientRooms, states) => {
     startGameInterval(gameCode, states, io);
 };
 
+const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
+    const roomName = clientRooms[client.id];
+    const players = states[roomName].players;
+
+    players[client.number - 1].playAgain = true;
+    io.sockets.in(roomName).emit('playAgainMarked', playerNumber);
+
+    if(players.every(player => player.playAgain))
+    {
+        let timeToPlayAgain = 5;
+        const intervalId = setInterval(() => {
+            if(timeToPlayAgain)
+            {
+                io.sockets.in(roomName).emit('counter', timeToPlayAgain--);
+            }
+            else
+            {
+                clearInterval(intervalId);
+                io.sockets.in(roomName).emit('prepareToPlayAgain');
+                states[roomName] = initGame();
+                startGameInterval(roomName, states, io);
+            }
+        }, 1000);
+    }
+};
+
+const handleDontPlayAgain = (client, states, clientRooms, io, playerNumber) => {
+    const roomName = clientRooms[client.id];
+    states[roomName].players[playerNumber - 1].playAgain = false;
+    io.sockets.in(roomName).emit('dontPlayAgainMarked', playerNumber);
+    let timeToReset = 5;
+    const intervalId = setInterval(() => {
+        if(!timeToReset)
+        {
+            clearInterval(intervalId);
+            io.sockets.in(roomName).emit('reset');
+            io.sockets.in(roomName).socketsLeave(roomName);
+            return;
+        }
+        io.sockets.in(roomName).emit('counter', timeToReset--);
+    }, 1000);
+};
+
 const handleConnection = (client, states, clientRooms, io) => {
     client.on('newGame', () => handleNewGame(clientRooms, client, states));
     client.on('joinGame', gameCode => handleJoinGame(gameCode, client, io, clientRooms, states));
     client.on('keyDown', key => handleKeyDown(key, client, states, clientRooms));
+    client.on('playAgain', playerNumber => handlePlayAgain(client, states, clientRooms, io, playerNumber));
+    client.on('dontPlayAgain', playerNumber => handleDontPlayAgain(client, states, clientRooms, io, playerNumber));
 };
 
 module.exports = {

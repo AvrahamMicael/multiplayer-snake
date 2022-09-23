@@ -8,6 +8,11 @@ const newGameButton = document.getElementById('newGameButton');
 const joinGameButton = document.getElementById('joinGameButton');
 const gameCodeInput = document.getElementById('gameCodeInput');
 const gameCodeSpan = document.getElementById('gameCodeSpan');
+const playAgainList = document.getElementById('playAgainList');
+const popupOuter = document.getElementById('popupOuter');
+const winnerTextH5 = document.getElementById('winnerText');
+const playerNumberH5 = document.getElementById('playerNumber');
+const playAgainButtonsDiv = document.getElementById('playAgainButtonsDiv');
 
 const bgColor = 'black';
 const snake1Color = 'blue';
@@ -46,15 +51,53 @@ const handleGameState = gameState => {
     requestAnimationFrame(() => paintGame(gameState));
 };
 
-const handleGameOver = loser => {
+const createPlayAgainListItem = playerNumber => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item';
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-circle-notch fa-spin text-primary';
+    icon.id = `icon-${playerNumber}`;
+    li.appendChild(icon);
+    const playerNameSpan = document.createElement('span');
+    playerNameSpan.textContent = ` - Player ${playerNumber}`;
+    li.appendChild(playerNameSpan);
+    playAgainList.appendChild(li);
+};
+
+const playAgainButtonOnClick = () => {
+    socket.emit('playAgain', playerNumber);
+};
+
+const dontPlayaAgainButtonOnClick = () => {
+    socket.emit('dontPlayAgain', playerNumber);
+};
+
+const createPlayAgainButtons = () => {
+    const yesButton = document.createElement('button');
+    const noButton = document.createElement('button');
+    yesButton.className = 'btn btn-success me-2';
+    noButton.className = 'btn btn-danger';
+    yesButton.textContent = 'Yes';
+    noButton.textContent = 'No';
+    yesButton.onclick = () => socket.emit('playAgain', playerNumber);
+    noButton.onclick = () => socket.emit('dontPlayAgain', playerNumber);
+    yesButton.type = noButton.type = 'button';
+    playAgainButtonsDiv.append(yesButton, noButton);
+};
+
+const handleGameOver = ({ winner, playersQty }) => {
     if(!gameActive) return;
     gameActive = false;
-    if(loser == playerNumber)
+
+    winnerTextH5.textContent = `${ winner == playerNumber ? 'You' : `Player ${winner}` } Win!`;
+
+    for(let i = 1; i <= playersQty; i++)
     {
-        alert('You win!');
-        return;
+        createPlayAgainListItem(i);
     }
-    alert('You lose.');
+    createPlayAgainButtons();
+
+    popupOuter.style.display = 'flex';
 };
 
 const handleGameCode = roomName => {
@@ -88,12 +131,34 @@ const joinGame = () => {
     init();
 };
 
+const removePlayAgainButtons = () => {
+    while(playAgainButtonsDiv.firstChild)
+    {
+        playAgainButtonsDiv.removeChild(playAgainButtonsDiv.lastChild);
+    }
+};
+
+const removePlayAgainListItems = () => {
+    while(playAgainList.firstChild)
+    {
+        playAgainList.removeChild(playAgainList.lastChild);
+    }
+};
+
+const resetPopup = () => {
+    removePlayAgainButtons();
+    removePlayAgainListItems();
+    popupOuter.style.display = 'none';
+    winnerTextH5.textContent = '';
+};
+
 const reset = () => {
     playerNumber = null;
     gameCodeInput.value = '';
     gameCodeSpan.innerText = '';
     initialScreen.style.display = 'block';
     gameScreen.style.display = 'none';
+    resetPopup();
 };
 
 const handleUnknownGame = () => {
@@ -106,8 +171,30 @@ const handleTooManyPlayers = () => {
     alert('This game is already in progress');
 };
 
+const handlePlayAgainMarked = markedPlayerNumber => {
+    const userIcon = document.getElementById(`icon-${markedPlayerNumber}`);
+    userIcon.className = 'fa fa-check text-success';
+    if(playerNumber == markedPlayerNumber) removePlayAgainButtons();
+};
+
+const handleDontPlayAgainMarked = markedPlayerNumber => {
+    const userIcon = document.getElementById(`icon-${markedPlayerNumber}`);
+    userIcon.className = 'fa-solid fa-x text-danger';
+    removePlayAgainButtons();
+};
+
+const handleCounter = count => {
+    playAgainButtonsDiv.textContent = count;
+};
+
+const handlePrepareToPlayAgain = () => {
+    resetPopup();
+    gameActive = true;
+};
+
 const handleInit = playerNum => {
     playerNumber = playerNum;
+    playerNumberH5.textContent = `Player ${playerNumber}`;
 };
 
 newGameButton.addEventListener('click', newGame);
@@ -119,3 +206,8 @@ socket.on('tooManyPlayers', handleTooManyPlayers);
 socket.on('gameCode', handleGameCode);
 socket.on('gameState', handleGameState);
 socket.on('gameOver', handleGameOver);
+socket.on('playAgainMarked', handlePlayAgainMarked);
+socket.on('dontPlayAgainMarked', handleDontPlayAgainMarked);
+socket.on('counter', handleCounter);
+socket.on('prepareToPlayAgain', handlePrepareToPlayAgain);
+socket.on('reset', reset);
