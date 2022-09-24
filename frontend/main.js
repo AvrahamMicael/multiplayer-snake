@@ -5,6 +5,7 @@ const socket = io('https://multiplayer---snake.herokuapp.com', {
 const initialScreen = document.getElementById('initialScreen');
 const gameScreen = document.getElementById('gameScreen');
 const newGameButton = document.getElementById('newGameButton');
+const new3PlayersGameButton = document.getElementById('new3PlayersGameButton');
 const joinGameButton = document.getElementById('joinGameButton');
 const gameCodeInput = document.getElementById('gameCodeInput');
 const gameCodeSpan = document.getElementById('gameCodeSpan');
@@ -15,8 +16,7 @@ const playerNumberH5 = document.getElementById('playerNumber');
 const playAgainButtonsDiv = document.getElementById('playAgainButtonsDiv');
 
 const bgColor = 'black';
-const snake1Color = 'blue';
-const snake2Color = 'green';
+const snakeColors = [ 'blue', 'green', 'white' ];
 const foodColor = 'red';
 
 let canvas, ctx, playerNumber;
@@ -24,7 +24,9 @@ let gameActive = false;
 
 const paintPlayer = (playerState, size, color) => {
     ctx.fillStyle = color;
-    playerState.snake.forEach(position => ctx.fillRect(position.x * size, position.y * size, size, size));
+    if(!playerState.lost) playerState.snake.forEach(position => {
+        ctx.fillRect(position.x * size, position.y * size, size, size)
+    });
 };
 
 const paintGame = state => {
@@ -38,8 +40,14 @@ const paintGame = state => {
     ctx.fillStyle = foodColor;
     ctx.fillRect(food.x * size, food.y * size, size, size);
 
-    paintPlayer(state.players[0], size, snake1Color);
-    paintPlayer(state.players[1], size, snake2Color);
+    state.players.map((player, playerIndex) => paintPlayer(player, size, snakeColors[playerIndex]));
+};
+
+const handleSnakeLost = ({ snake, size }) => {
+    ctx.fillStyle = bgColor;
+    snake.forEach(position => {
+        ctx.fillRect(position.x * size, position.y * size, size, size);
+    });
 };
 
 const onKeyDown = ev => {
@@ -85,11 +93,11 @@ const createPlayAgainButtons = () => {
     playAgainButtonsDiv.append(yesButton, noButton);
 };
 
-const handleGameOver = ({ winner, playersQty }) => {
+const handleGameOver = ({ winnerNumber, playersQty }) => {
     if(!gameActive) return;
     gameActive = false;
 
-    winnerTextH5.textContent = `${ winner == playerNumber ? 'You' : `Player ${winner}` } Win!`;
+    winnerTextH5.textContent = `${ winnerNumber == playerNumber ? 'You' : `Player ${winnerNumber}` } Win!`;
 
     for(let i = 1; i <= playersQty; i++)
     {
@@ -120,8 +128,8 @@ const init = () => {
     gameActive = true;
 };
 
-const newGame = () => {
-    socket.emit('newGame');
+const newGame = playersQty => {
+    socket.emit('newGame', playersQty);
     init();
 };
 
@@ -197,7 +205,8 @@ const handleInit = playerNum => {
     playerNumberH5.textContent = `Player ${playerNumber}`;
 };
 
-newGameButton.addEventListener('click', newGame);
+newGameButton.addEventListener('click', () => newGame(2));
+new3PlayersGameButton.addEventListener('click', () => newGame(3));
 joinGameButton.addEventListener('click', joinGame);
 
 socket.on('init', handleInit);
@@ -210,4 +219,5 @@ socket.on('playAgainMarked', handlePlayAgainMarked);
 socket.on('dontPlayAgainMarked', handleDontPlayAgainMarked);
 socket.on('counter', handleCounter);
 socket.on('prepareToPlayAgain', handlePrepareToPlayAgain);
+socket.on('snakeLost', handleSnakeLost);
 socket.on('reset', reset);

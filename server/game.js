@@ -1,8 +1,8 @@
 const { gridSize, frameRate } = require('./constants');
 const { makeId } = require('./utils');
 
-const createGameState = () => ({
-    players: [
+const createGameState = playersQty => {
+    const players = [
         {
             pos: {
                 x: 3,
@@ -18,6 +18,7 @@ const createGameState = () => ({
                 { x: 3, y: 10 },
             ],
             playAgain: false,
+            lost: false,
         },
         {
             pos: {
@@ -34,11 +35,34 @@ const createGameState = () => ({
                 { x: 3, y: 5 },
             ],
             playAgain: false,
+            lost: false,
         },
-    ],
-    food: {},
-    gridSize,
-});
+    ];
+
+    if(playersQty == 3) players.push({
+        pos: {
+            x: 3,
+            y: 15,
+        },
+        vel: {
+            x: 1,
+            y: 0,
+        },
+        snake: [
+            { x: 1, y: 15 },
+            { x: 2, y: 15 },
+            { x: 3, y: 15 },
+        ],
+        playAgain: false,
+        lost: false,
+    });
+
+    return {
+        players,
+        gridSize,
+        food: {},
+    };
+};
 
 const randomFood = state => {
     const food = {
@@ -67,114 +91,106 @@ const randomFood = state => {
 };
 
 const gameLoop = state => {
-    const stateOnGameOver = winner => ({
-        winner,
-        playersQty: state.players.length,
-    });
-    const playerOne = state.players[0];
-    const playerTwo = state.players[1];
+    let loserData = null;
+    const stateOnGameOver = loser => {
+        state.players[loser - 1].lost = true;
+        return {
+            loser,
+            playersQty: state.players.length,
+        };
+    };
 
-    playerOne.pos.x += playerOne.vel.x;
-    playerOne.pos.y += playerOne.vel.y;
+    const checkIfSomeoneLost = () => {
+        state.players.every((player, playerIndex, players) => {
+            const playerNumber = playerIndex + 1;
+            player.pos.x += player.vel.x;
+            player.pos.y += player.vel.y;
 
-    playerTwo.pos.x += playerTwo.vel.x;
-    playerTwo.pos.y += playerTwo.vel.y;
-
-    if(playerOne.pos.x < 0
-    || playerOne.pos.x > gridSize
-    || playerOne.pos.y < 0
-    || playerOne.pos.y > gridSize)
-    {
-        return stateOnGameOver(2);
-    }
-    if(playerTwo.pos.x < 0
-    || playerTwo.pos.x > gridSize
-    || playerTwo.pos.y < 0
-    || playerTwo.pos.y > gridSize)
-    {
-        return stateOnGameOver(1);
-    }
-
-    if(state.food.x == playerOne.pos.x
-    && state.food.y == playerOne.pos.y)
-    {
-        playerOne.snake.push({ ...playerOne.pos });
-        playerOne.pos.x += playerOne.vel.x;
-        playerOne.pos.y += playerOne.vel.y;
-        randomFood(state);
-    }
-    if(state.food.x == playerTwo.pos.x
-    && state.food.y == playerTwo.pos.y)
-    {
-        playerTwo.snake.push({ ...playerTwo.pos });
-        playerTwo.pos.x += playerTwo.vel.x;
-        playerTwo.pos.y += playerTwo.vel.y;
-        randomFood(state);
-    }
-
-    if(playerOne.vel.x
-    || playerOne.vel.y)
-    {
-        for(let snake1Cell of playerOne.snake)
-        {
-            if(snake1Cell.x == playerOne.pos.x
-            && snake1Cell.y == playerOne.pos.y)
+            if(player.pos.x < 0
+            || player.pos.x > gridSize
+            || player.pos.y < 0
+            || player.pos.y > gridSize)
             {
-                return stateOnGameOver(2);
+                loserData = stateOnGameOver(playerNumber);
             }
-        }
-        for(let snake2Cell of playerTwo.snake)
-        {
-            if(snake2Cell.x == playerOne.pos.x
-            && snake2Cell.y == playerOne.pos.y)
-            {
-                return stateOnGameOver(2);
-            }
-        }
-    }
-    if(playerTwo.vel.x
-    || playerTwo.vel.y)
-    {
-        for(let snake2Cell of playerTwo.snake)
-        {
-            if(snake2Cell.x == playerTwo.pos.x
-            && snake2Cell.y == playerTwo.pos.y)
-            {
-                return stateOnGameOver(1);
-            }
-        }
-        for(let snake1Cell of playerOne.snake)
-        {
-            if(snake1Cell.x == playerTwo.pos.x
-            && snake1Cell.y == playerTwo.pos.y)
-            {
-                return stateOnGameOver(1);
-            }
-        }
-    }
 
-    playerOne.snake.push({ ...playerOne.pos });
-    playerOne.snake.shift();
+            if(state.food.x == player.pos.x
+            && state.food.y == player.pos.y)
+            {
+                player.snake.push({ ...player.pos });
+                player.pos.x += player.vel.x;
+                player.pos.y += player.vel.y;
+                randomFood(state);
+            }
+            
+            if(player.vel.x
+            || player.vel.y)
+            {
+                for(const arrayPlayer of players)
+                {
+                    for(const snakeCell of arrayPlayer.snake)
+                    {
+                        if(snakeCell.x == player.pos.x
+                        && snakeCell.y == player.pos.y)
+                        {
+                            loserData = stateOnGameOver(playerNumber);
+                        }
+                    }
+                }
+            }
 
-    playerTwo.snake.push({ ...playerTwo.pos });
-    playerTwo.snake.shift();
+            if(loserData)
+            {
+                player.pos = {};
+                player.vel = {};
+                player.snake = [];
+            }
+            else
+            {
+                player.snake.push({ ...player.pos });
+                player.snake.shift();
+            }
 
-    return false;
+            return loserData
+                ? players.filter(player => !player.lost).length > 1
+                : true;
+        });
+    };
+
+    checkIfSomeoneLost();
+
+    return loserData;
 };
 
 const startGameInterval = (gameCode, states, io) => {
     const intervalId = setInterval(() => {
         let state = states[gameCode];
-        const winner = gameLoop(state);
-        if(!winner)
+        const loserData = gameLoop(state);
+        if(!loserData)
         {
             io.sockets.in(gameCode)
                 .emit('gameState', state);
         }
-        else
+        else if(state.players.filter(player => !player.lost).length > 1)
         {
             io.sockets.in(gameCode)
-                .emit('gameOver', winner);
+                .emit('snakeLost', {
+                    snake: state.players[loserData.loser - 1].snake,
+                    size: state.gridSize,
+                });
+        }
+        else
+        {
+            let winnerNumber;
+            state.players.some((player, index) => {
+                winnerNumber = index + 1;
+                return !player.lost;
+            });
+            io.sockets.in(gameCode)
+                .emit('gameOver', {
+                    winnerNumber,
+                    playersQty: loserData.playersQty,
+                });
             state = null;
             clearInterval(intervalId);
         }
@@ -206,18 +222,18 @@ const handleKeyDown = (key, client, states, clientRooms) => {
 };
 
 
-const initGame = () => {
-    const state = createGameState();
+const initGame = playersQty => {
+    const state = createGameState(playersQty);
     randomFood(state);
     return state;
 };
 
-const handleNewGame = (clientRooms, client, states) => {
+const handleNewGame = (clientRooms, client, states, playersQty) => {
     const roomName = makeId();
     clientRooms[client.id] = roomName;
     client.emit('gameCode', roomName);
 
-    states[roomName] = initGame();
+    states[roomName] = initGame(playersQty);
 
     client.join(roomName);
     client.number = 1;
@@ -236,7 +252,9 @@ const handleJoinGame = (gameCode, client, io, clientRooms, states) => {
         client.emit('unknownGame');
         return;
     }
-    if(roomSize > 1)
+
+    const playersQty = states[gameCode].players.length;
+    if(roomSize >= playersQty)
     {
         client.emit('tooManyPlayers');
         return;
@@ -244,10 +262,10 @@ const handleJoinGame = (gameCode, client, io, clientRooms, states) => {
 
     clientRooms[client.id] = gameCode;
     client.join(gameCode);
-    client.number = 2;
-    client.emit('init', 2);
+    client.number = roomSize + 1;
+    client.emit('init', client.number);
 
-    startGameInterval(gameCode, states, io);
+    if(client.number == playersQty) startGameInterval(gameCode, states, io);
 };
 
 const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
@@ -269,16 +287,15 @@ const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
             {
                 clearInterval(intervalId);
                 io.sockets.in(roomName).emit('prepareToPlayAgain');
-                states[roomName] = initGame();
+                states[roomName] = initGame(players.length);
                 startGameInterval(roomName, states, io);
             }
         }, 1000);
     }
 };
 
-const handleDontPlayAgain = (client, states, clientRooms, io, playerNumber) => {
+const handleDontPlayAgain = (client, clientRooms, io, playerNumber) => {
     const roomName = clientRooms[client.id];
-    states[roomName].players[playerNumber - 1].playAgain = false;
     io.sockets.in(roomName).emit('dontPlayAgainMarked', playerNumber);
     let timeToReset = 5;
     const intervalId = setInterval(() => {
@@ -294,11 +311,11 @@ const handleDontPlayAgain = (client, states, clientRooms, io, playerNumber) => {
 };
 
 const handleConnection = (client, states, clientRooms, io) => {
-    client.on('newGame', () => handleNewGame(clientRooms, client, states));
+    client.on('newGame', playersQty => handleNewGame(clientRooms, client, states, playersQty));
     client.on('joinGame', gameCode => handleJoinGame(gameCode, client, io, clientRooms, states));
     client.on('keyDown', key => handleKeyDown(key, client, states, clientRooms));
     client.on('playAgain', playerNumber => handlePlayAgain(client, states, clientRooms, io, playerNumber));
-    client.on('dontPlayAgain', playerNumber => handleDontPlayAgain(client, states, clientRooms, io, playerNumber));
+    client.on('dontPlayAgain', playerNumber => handleDontPlayAgain(client, clientRooms, io, playerNumber));
 };
 
 module.exports = {
