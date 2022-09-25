@@ -70,130 +70,121 @@ const randomFood = state => {
         y: Math.floor( Math.random() * gridSize ),
     };
 
-    for(let cell in state.players[0].snake)
+    for(const player of state.players)
     {
-        if(cell.x == food.x 
-        && cell.y == food.y)
+        for(const cell in player.snake)
         {
-            return randomFood(state);
-        }
-    }
-    for(let cell in state.players[1].snake)
-    {
-        if(cell.x == food.x 
-        && cell.y == food.y)
-        {
-            return randomFood(state);
+            if(cell.x == food.x 
+            && cell.y == food.y)
+            {
+                return randomFood(state);
+            }
         }
     }
 
     state.food = food;
 };
 
-const gameLoop = state => {
-    let loserData = null;
-    const stateOnGameOver = loser => {
-        state.players[loser - 1].lost = true;
-        return {
-            loser,
-            playersQty: state.players.length,
-        };
-    };
+const gameLoop = (state, io, roomName) => {
+    let wonGameStateData = null;
+    const stateOnGameOver = () => ({
+        playersQty: state.players.length,
+    });
 
-    const checkIfSomeoneLost = () => {
-        state.players.every((player, playerIndex, players) => {
-            const playerNumber = playerIndex + 1;
+    state.players.forEach((player, _, players) => {
+        if(player.lost) return;
+        let lost = false;
+
+        player.pos.x += player.vel.x;
+        player.pos.y += player.vel.y;
+
+        if(player.pos.x < 0
+        || player.pos.x > gridSize
+        || player.pos.y < 0
+        || player.pos.y > gridSize)
+        {
+            lost = true;
+        }
+
+        if(state.food.x == player.pos.x
+        && state.food.y == player.pos.y)
+        {
+            player.snake.push({ ...player.pos });
             player.pos.x += player.vel.x;
             player.pos.y += player.vel.y;
-
-            if(player.pos.x < 0
-            || player.pos.x > gridSize
-            || player.pos.y < 0
-            || player.pos.y > gridSize)
+            randomFood(state);
+        }
+        
+        if(player.vel.x
+        || player.vel.y)
+        {
+            for(const arrayPlayer of players)
             {
-                loserData = stateOnGameOver(playerNumber);
-            }
-
-            if(state.food.x == player.pos.x
-            && state.food.y == player.pos.y)
-            {
-                player.snake.push({ ...player.pos });
-                player.pos.x += player.vel.x;
-                player.pos.y += player.vel.y;
-                randomFood(state);
-            }
-            
-            if(player.vel.x
-            || player.vel.y)
-            {
-                for(const arrayPlayer of players)
+                for(const snakeCell of arrayPlayer.snake)
                 {
-                    for(const snakeCell of arrayPlayer.snake)
+                    if(snakeCell.x == player.pos.x
+                    && snakeCell.y == player.pos.y)
                     {
-                        if(snakeCell.x == player.pos.x
-                        && snakeCell.y == player.pos.y)
-                        {
-                            loserData = stateOnGameOver(playerNumber);
-                        }
+                        lost = true;
                     }
+                    if(lost) break;
                 }
+                if(lost) break;
             }
+        }
 
-            if(loserData)
+        if(lost)
+        {
+            player.pos = {};
+            player.vel = {};
+            player.snake = [];
+            player.lost = true;
+
+            const alivePlayers = players.filter(player => !player.lost);
+            if(alivePlayers.length > 1)
             {
-                player.pos = {};
-                player.vel = {};
-                player.snake = [];
+                io.sockets
+                    .in(roomName)
+                    .emit('snakeLost', {
+                        snake: player.snake,
+                        size: state.gridSize,
+                    });
+                return;
             }
-            else
-            {
-                player.snake.push({ ...player.pos });
-                player.snake.shift();
-            }
+            wonGameStateData = stateOnGameOver();
+            return;
+        }
+        player.snake.push({ ...player.pos });
+        player.snake.shift();
+    });
 
-            return loserData
-                ? players.filter(player => !player.lost).length > 1
-                : true;
-        });
-    };
-
-    checkIfSomeoneLost();
-
-    return loserData;
+    return wonGameStateData;
 };
 
-const startGameInterval = (gameCode, states, io) => {
+const startGameInterval = (roomName, states, io) => {
     const intervalId = setInterval(() => {
-        let state = states[gameCode];
-        const loserData = gameLoop(state);
-        if(!loserData)
+        let state = states[roomName];
+        const wonGameData = gameLoop(state, io, roomName);
+        if(!wonGameData)
         {
-            io.sockets.in(gameCode)
+            io.sockets
+                .in(roomName)
                 .emit('gameState', state);
+            return;
         }
-        else if(state.players.filter(player => !player.lost).length > 1)
-        {
-            io.sockets.in(gameCode)
-                .emit('snakeLost', {
-                    snake: state.players[loserData.loser - 1].snake,
-                    size: state.gridSize,
-                });
-        }
-        else
-        {
-            let winnerNumber;
-            state.players.some((player, index) => {
-                winnerNumber = index + 1;
-                return !player.lost;
+        let winnerNumber;
+        state.players.some((player, index) => {
+            winnerNumber = index + 1;
+            return !player.lost;
+        });
+        io.sockets
+            .in(roomName)
+            .emit('gameOver', {
+                winnerNumber,
+                playersQty: wonGameData.playersQty,
             });
-            io.sockets.in(gameCode)
-                .emit('gameOver', {
-                    winnerNumber,
-                    playersQty: loserData.playersQty,
-                });
-            state = null;
-            clearInterval(intervalId);
-        }
+        state = null;
+        clearInterval(intervalId);
     }, 1000 / frameRate);
 };
 
@@ -215,10 +206,15 @@ const handleKeyDown = (key, client, states, clientRooms) => {
     const roomName = clientRooms[client.id];
     if(!roomName) return;
     const vel = getUpdatedVelocity(key);
-    if(vel)
-    {
-        states[roomName].players[client.number - 1].vel = vel;
-    }
+    if(!vel) return;
+    const player = states[roomName].players[client.number - 1];
+    if(!Object.keys(player.vel).length) return;
+    if(Math.abs(vel.x) == Math.abs(player.vel.x)) return;
+    const playerNextPosX = player.pos.x + vel.x;
+    const playerNextPosY = player.pos.y + vel.y;
+    const playerSnakeSecondCell = player.snake[player.snake.length - 2];
+    if(playerSnakeSecondCell.x == playerNextPosX && playerSnakeSecondCell.y == playerNextPosY) return;
+    player.vel = vel;
 };
 
 
