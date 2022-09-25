@@ -21,20 +21,37 @@
         <div id="initialScreen" class="h-100">
             <div class="d-flex flex-column align-items-center justify-content-center h-100">
                 <h1>Multiplayer Snake</h1>
-                <button type="submit" id="newGameButton" class="btn btn-success">
-                    Create 2 Players New Game
-                </button>
-                <div>OR</div>
-                <button type="submit" id="new3PlayersGameButton" class="btn btn-success">
-                    Create 3 Players New Game
-                </button>
-                <div>OR</div>
-                <div class="form-group">
-                    <input type="text" placeholder="Enter Game Code" autocomplete="off" id="gameCodeInput" spellcheck="false">
+                <div class="input-group">
+                    <input
+                        type="number"
+                        min="2"
+                        max="3"
+                        value="2"
+                        id="playersQtyInput"
+                        class="form-control"
+                        title="Total Players"
+                    >
+                    <button type="submit" id="newGameButton" class="btn btn-success">
+                        Create <span id="playersQtySpan">2</span> Players Game
+                    </button>
                 </div>
-                <button type="submit" id="joinGameButton" class="btn btn-success">
-                    Join Game
-                </button>
+                <div>OR</div>
+                <div class="input-group">
+                    <input
+                        type="text"
+                        placeholder="Enter Game Code"
+                        autocomplete="off"
+                        id="gameCodeInput"
+                        spellcheck="false"
+                        class="form-control"
+                        title="Field must be 5 characters long"
+                        minlength="5"
+                        maxlength="5"
+                    >
+                    <button type="submit" id="joinGameButton" class="btn btn-success">
+                        Join Game
+                    </button>
+                </div>
             </div>
         </div>
 

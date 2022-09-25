@@ -11,7 +11,6 @@ const isMobile = (() => {
 const initialScreen = document.getElementById('initialScreen');
 const gameScreen = document.getElementById('gameScreen');
 const newGameButton = document.getElementById('newGameButton');
-const new3PlayersGameButton = document.getElementById('new3PlayersGameButton');
 const joinGameButton = document.getElementById('joinGameButton');
 const gameCodeInput = document.getElementById('gameCodeInput');
 const gameCodeSpan = document.getElementById('gameCodeSpan');
@@ -20,6 +19,8 @@ const popupOuter = document.getElementById('popupOuter');
 const winnerTextH5 = document.getElementById('winnerText');
 const playerNumberH5 = document.getElementById('playerNumber');
 const playAgainButtonsDiv = document.getElementById('playAgainButtonsDiv');
+const playersQtyInput = document.getElementById('playersQtyInput');
+const playersQtySpan = document.getElementById('playersQtySpan');
 
 const bgColor = 'black';
 const snakeColors = [ 'blue', 'green', 'white' ];
@@ -60,6 +61,10 @@ const handleSnakeLost = ({ snake, size }) => {
 
 const onKeyDown = ev => {
     socket.emit('keyDown', ev.key);
+};
+
+const onChangePlayersQty = ev => {
+    playersQtySpan.textContent = ev.target.value;
 };
 
 const onTouchStart = ev => {
@@ -178,10 +183,18 @@ const newGame = playersQty => {
     init();
 };
 
+const onClickNewGame = () => {
+    newGame(playersQtyInput.valueAsNumber);
+};
+
 const joinGame = () => {
     const code = gameCodeInput.value;
     socket.emit('joinGame', code);
     init();
+};
+
+const onGameCodeKeyDown = ev => {
+    if(ev.key == 'Enter') joinGame();
 };
 
 const removePlayAgainButtons = () => {
@@ -250,8 +263,9 @@ const handleInit = playerNum => {
     playerNumberH5.textContent = `Player ${playerNumber}`;
 };
 
-newGameButton.addEventListener('click', () => newGame(2));
-new3PlayersGameButton.addEventListener('click', () => newGame(3));
+playersQtyInput.addEventListener('change', onChangePlayersQty)
+newGameButton.addEventListener('click', onClickNewGame);
+gameCodeInput.addEventListener('keydown', onGameCodeKeyDown);
 joinGameButton.addEventListener('click', joinGame);
 
 socket.on('init', handleInit);
