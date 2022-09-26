@@ -64,7 +64,11 @@ const onKeyDown = ev => {
 };
 
 const onChangePlayersQty = ev => {
-    playersQtySpan.textContent = ev.target.value;
+    if(!/^[2-3]+$/.test(ev.currentTarget.value))
+    {
+        ev.currentTarget.value = 2;
+    }
+    playersQtySpan.textContent = ev.currentTarget.value;
 };
 
 const onTouchStart = ev => {
@@ -180,6 +184,7 @@ const init = () => {
 
 const newGame = playersQty => {
     socket.emit('newGame', playersQty);
+    if(isMobile) document.body.requestFullscreen();
     init();
 };
 
@@ -190,6 +195,7 @@ const onClickNewGame = () => {
 const joinGame = () => {
     const code = gameCodeInput.value;
     socket.emit('joinGame', code);
+    if(isMobile) document.body.requestFullscreen();
     init();
 };
 
@@ -256,6 +262,7 @@ const handleCounter = count => {
 const handlePrepareToPlayAgain = () => {
     resetPopup();
     gameActive = true;
+    if(isMobile) document.body.requestFullscreen();
 };
 
 const handleInit = playerNum => {
