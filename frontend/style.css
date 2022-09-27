@@ -50,6 +50,41 @@ body
     background-color: rgba(255, 0, 0, .5);
 }
 
+#gameTitle
+{
+    position: relative;
+}
+
+#settingsButton
+{
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: 0;
+    right: -6px;
+    outline: none;
+    border: none;
+    background-color: transparent;
+    font-size: 10px;
+    color: #0DCAF0;
+}
+
+#settingsDiv
+{
+    display: none;
+}
+
+#gameEnterDiv
+{
+    text-align: center;
+}
+
+#velocitySpan
+{
+    text-decoration: underline;
+    color: #0D6EFD;
+}
+
 :fullscreen,
 ::backdrop
 {

@@ -20,37 +20,50 @@
     <main class="vh-100 container d-flex justify-content-center align-items-center">
         <div id="initialScreen" class="h-100">
             <div class="d-flex flex-column align-items-center justify-content-center h-100">
-                <h1>Multiplayer Snake</h1>
-                <div class="input-group">
-                    <input
-                        type="number"
-                        min="2"
-                        max="3"
-                        value="2"
-                        id="playersQtyInput"
-                        class="form-control"
-                        title="Total Players"
-                    >
-                    <button type="submit" id="newGameButton" class="btn btn-success">
-                        Create <span id="playersQtySpan">2</span> Players Game
+                <h1 id="gameTitle">
+                    Multiplayer Snake
+                    <button type="button" title="Settings" id="settingsButton">
+                        <i class="fa fa-cog" aria-hidden="true"></i>
                     </button>
+                </h1>
+                <div id="settingsDiv">
+                    <div class="input-group">
+                        <div class="input-group-text">Velocity:&nbsp;<span id="velocitySpan">7</span></div>
+                        <input type="range" id="velocityInput" class="form-control" min="1" max="20" value="7">
+                    </div>
                 </div>
-                <div>OR</div>
-                <div class="input-group">
-                    <input
-                        type="text"
-                        placeholder="Enter Game Code"
-                        autocomplete="off"
-                        id="gameCodeInput"
-                        spellcheck="false"
-                        class="form-control"
-                        title="Field must be 5 characters long"
-                        minlength="5"
-                        maxlength="5"
-                    >
-                    <button type="submit" id="joinGameButton" class="btn btn-success">
-                        Join Game
-                    </button>
+                <div id="gameEnterDiv">
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            min="2"
+                            max="3"
+                            value="2"
+                            id="playersQtyInput"
+                            class="form-control"
+                            title="Total Players"
+                        >
+                        <button type="submit" id="newGameButton" class="btn btn-success">
+                            Create <span id="playersQtySpan">2</span> Players Game
+                        </button>
+                    </div>
+                    <div>OR</div>
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            placeholder="Enter Game Code"
+                            autocomplete="off"
+                            id="gameCodeInput"
+                            spellcheck="false"
+                            class="form-control"
+                            title="Field must be 5 characters long"
+                            minlength="5"
+                            maxlength="5"
+                        >
+                        <button type="submit" id="joinGameButton" class="btn btn-success">
+                            Join Game
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

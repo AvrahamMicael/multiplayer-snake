@@ -21,6 +21,11 @@ const playerNumberH5 = document.getElementById('playerNumber');
 const playAgainButtonsDiv = document.getElementById('playAgainButtonsDiv');
 const playersQtyInput = document.getElementById('playersQtyInput');
 const playersQtySpan = document.getElementById('playersQtySpan');
+const settingsButton = document.getElementById('settingsButton');
+const settingsDiv = document.getElementById('settingsDiv');
+const gameEnterDiv = document.getElementById('gameEnterDiv');
+const velocityInput = document.getElementById('velocityInput');
+const velocitySpan = document.getElementById('velocitySpan');
 
 const bgColor = 'black';
 const snakeColors = [ 'blue', 'green', 'white' ];
@@ -63,8 +68,8 @@ const onKeyDown = ev => {
     socket.emit('keyDown', ev.key);
 };
 
-const onChangePlayersQty = ev => {
-    if(!/^[2-3]+$/.test(ev.currentTarget.value))
+const changePlayersQty = ev => {
+    if(!/^[2-3]$/.test(ev.currentTarget.value))
     {
         ev.currentTarget.value = 2;
     }
@@ -127,6 +132,26 @@ const dontPlayaAgainButtonOnClick = () => {
     socket.emit('dontPlayAgain', playerNumber);
 };
 
+const toggleSettings = () => {
+    const [ settingsDivDisplay, gameEnterDivDisplay ] = settingsDiv.style.display == 'none'
+        ? [ 'block', 'none' ]
+        : [ 'none', 'block' ];
+    settingsDiv.style.display = settingsDivDisplay;
+    gameEnterDiv.style.display = gameEnterDivDisplay;
+};
+
+const setVelocityFromCache = () => {
+    const frameRate = localStorage.frameRate || 7;
+    velocitySpan.textContent = frameRate;
+    velocityInput.value = frameRate;
+};
+
+const changeVelocitySpanAndCache = ev => {
+    const value = ev.currentTarget.value;
+    velocitySpan.textContent = value;
+    localStorage.frameRate = value;
+};
+
 const createPlayAgainButtons = () => {
     const yesButton = document.createElement('button');
     const noButton = document.createElement('button');
@@ -182,14 +207,13 @@ const init = () => {
     gameActive = true;
 };
 
-const newGame = playersQty => {
-    socket.emit('newGame', playersQty);
+const newGame = () => {
+    socket.emit('newGame', {
+        playersQty: playersQtyInput.valueAsNumber,
+        frameRate: velocityInput.valueAsNumber,
+    });
     if(isMobile) document.body.requestFullscreen();
     init();
-};
-
-const onClickNewGame = () => {
-    newGame(playersQtyInput.valueAsNumber);
 };
 
 const joinGame = () => {
@@ -270,10 +294,14 @@ const handleInit = playerNum => {
     playerNumberH5.textContent = `Player ${playerNumber}`;
 };
 
-playersQtyInput.addEventListener('change', onChangePlayersQty)
-newGameButton.addEventListener('click', onClickNewGame);
+
+settingsButton.addEventListener('click', toggleSettings);
+playersQtyInput.addEventListener('input', changePlayersQty)
+velocityInput.addEventListener('input', changeVelocitySpanAndCache)
+newGameButton.addEventListener('click', newGame);
 gameCodeInput.addEventListener('keydown', onGameCodeKeyDown);
 joinGameButton.addEventListener('click', joinGame);
+setVelocityFromCache();
 
 socket.on('init', handleInit);
 socket.on('unknownGame', handleUnknownGame);

@@ -1,7 +1,8 @@
-const { gridSize, frameRate } = require('./constants');
+const { gridSize } = require('./constants');
 const { makeId } = require('./utils');
 
-const createGameState = playersQty => {
+const createGameState = ({ playersQty, frameRate }) => {
+    if(frameRate < 1) frameRate = 7;
     const players = [
         {
             pos: {
@@ -60,6 +61,7 @@ const createGameState = playersQty => {
     return {
         players,
         gridSize,
+        frameRate,
         food: {},
     };
 };
@@ -162,8 +164,8 @@ const gameLoop = (state, io, roomName) => {
 };
 
 const startGameInterval = (roomName, states, io) => {
+    const state = states[roomName];
     const intervalId = setInterval(() => {
-        let state = states[roomName];
         const wonGameData = gameLoop(state, io, roomName);
         if(!wonGameData)
         {
@@ -183,9 +185,8 @@ const startGameInterval = (roomName, states, io) => {
                 winnerNumber,
                 playersQty: wonGameData.playersQty,
             });
-        state = null;
         clearInterval(intervalId);
-    }, 1000 / frameRate);
+    }, 1000 / state.frameRate);
 };
 
 const getUpdatedVelocity = key => {
@@ -218,18 +219,18 @@ const handleKeyDown = (key, client, states, clientRooms) => {
 };
 
 
-const initGame = playersQty => {
-    const state = createGameState(playersQty);
+const initGame = gameStateSettings => {
+    const state = createGameState(gameStateSettings);
     randomFood(state);
     return state;
 };
 
-const handleNewGame = (clientRooms, client, states, playersQty) => {
+const handleNewGame = (clientRooms, client, states, gameStateSettings) => {
     const roomName = makeId();
     clientRooms[client.id] = roomName;
     client.emit('gameCode', roomName);
 
-    states[roomName] = initGame(playersQty);
+    states[roomName] = initGame(gameStateSettings);
 
     client.join(roomName);
     client.number = 1;
@@ -266,7 +267,7 @@ const handleJoinGame = (gameCode, client, io, clientRooms, states) => {
 
 const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
     const roomName = clientRooms[client.id];
-    const players = states[roomName].players;
+    const { players, frameRate } = states[roomName];
 
     players[client.number - 1].playAgain = true;
     io.sockets.in(roomName).emit('playAgainMarked', playerNumber);
@@ -283,7 +284,7 @@ const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
             {
                 clearInterval(intervalId);
                 io.sockets.in(roomName).emit('prepareToPlayAgain');
-                states[roomName] = initGame(players.length);
+                states[roomName] = initGame({ playersQty: players.length, frameRate });
                 startGameInterval(roomName, states, io);
             }
         }, 1000);
@@ -307,7 +308,7 @@ const handleDontPlayAgain = (client, clientRooms, io, playerNumber) => {
 };
 
 const handleConnection = (client, states, clientRooms, io) => {
-    client.on('newGame', playersQty => handleNewGame(clientRooms, client, states, playersQty));
+    client.on('newGame', gameStateSettings => handleNewGame(clientRooms, client, states, gameStateSettings));
     client.on('joinGame', gameCode => handleJoinGame(gameCode, client, io, clientRooms, states));
     client.on('keyDown', key => handleKeyDown(key, client, states, clientRooms));
     client.on('playAgain', playerNumber => handlePlayAgain(client, states, clientRooms, io, playerNumber));
