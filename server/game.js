@@ -1,63 +1,149 @@
 const { gridSize } = require('./constants');
 const { makeId } = require('./utils');
 
+const getPlayers = playersQty => [
+        {
+            pos: {
+                x: 3,
+                y: 2,
+            },
+            vel: {
+                x: 1,
+                y: 0,
+            },
+            snake: [
+                { x: 1, y: 2 },
+                { x: 2, y: 2 },
+                { x: 3, y: 2 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 17,
+                y: 18,
+            },
+            vel: {
+                x: -1,
+                y: 0,
+            },
+            snake: [
+                { x: 19, y: 18 },
+                { x: 18, y: 18 },
+                { x: 17, y: 18 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 3,
+                y: 7,
+            },
+            vel: {
+                x: 1,
+                y: 0,
+            },
+            snake: [
+                { x: 1, y: 7 },
+                { x: 2, y: 7 },
+                { x: 3, y: 7 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 17,
+                y: 13,
+            },
+            vel: {
+                x: -1,
+                y: 0,
+            },
+            snake: [
+                { x: 19, y: 13 },
+                { x: 18, y: 13 },
+                { x: 17, y: 13 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 3,
+                y: 12,
+            },
+            vel: {
+                x: 1,
+                y: 0,
+            },
+            snake: [
+                { x: 1, y: 12 },
+                { x: 2, y: 12 },
+                { x: 3, y: 12 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 17,
+                y: 8,
+            },
+            vel: {
+                x: -1,
+                y: 0,
+            },
+            snake: [
+                { x: 19, y: 8 },
+                { x: 18, y: 8 },
+                { x: 17, y: 8 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 3,
+                y: 17,
+            },
+            vel: {
+                x: 1,
+                y: 0,
+            },
+            snake: [
+                { x: 1, y: 17 },
+                { x: 2, y: 17 },
+                { x: 3, y: 17 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+        {
+            pos: {
+                x: 17,
+                y: 3,
+            },
+            vel: {
+                x: -1,
+                y: 0,
+            },
+            snake: [
+                { x: 19, y: 3 },
+                { x: 18, y: 3 },
+                { x: 17, y: 3 },
+            ],
+            playAgain: false,
+            lost: false,
+        },
+    ].slice(0, playersQty);
+
 const createGameState = ({ playersQty, frameRate }) => {
-    if(frameRate < 1) frameRate = 7;
-    const players = [
-        {
-            pos: {
-                x: 3,
-                y: 10,
-            },
-            vel: {
-                x: 1,
-                y: 0,
-            },
-            snake: [
-                { x: 1, y: 10 },
-                { x: 2, y: 10 },
-                { x: 3, y: 10 },
-            ],
-            playAgain: false,
-            lost: false,
-        },
-        {
-            pos: {
-                x: 3,
-                y: 5,
-            },
-            vel: {
-                x: 1,
-                y: 0,
-            },
-            snake: [
-                { x: 1, y: 5 },
-                { x: 2, y: 5 },
-                { x: 3, y: 5 },
-            ],
-            playAgain: false,
-            lost: false,
-        },
-    ];
-
-    if(playersQty == 3) players.push({
-        pos: {
-            x: 3,
-            y: 15,
-        },
-        vel: {
-            x: 1,
-            y: 0,
-        },
-        snake: [
-            { x: 1, y: 15 },
-            { x: 2, y: 15 },
-            { x: 3, y: 15 },
-        ],
-        playAgain: false,
-        lost: false,
-    });
-
+    if(typeof frameRate != 'number' || frameRate < 1) frameRate = 7;
+    if(typeof playersQty != 'number' || playersQty < 2 || playersQty > 8) playersQty = 2;
+    const players = getPlayers(playersQty);
     return {
         players,
         gridSize,

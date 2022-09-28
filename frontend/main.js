@@ -28,7 +28,7 @@ const velocityInput = document.getElementById('velocityInput');
 const velocitySpan = document.getElementById('velocitySpan');
 
 const bgColor = 'black';
-const snakeColors = [ 'blue', 'green', 'white' ];
+const snakeColors = [ 'blue', 'green', 'white', 'purple', 'yellow', 'pink', 'brown', 'orange' ];
 const foodColor = 'red';
 
 let canvas, ctx, playerNumber;
@@ -69,7 +69,7 @@ const onKeyDown = ev => {
 };
 
 const changePlayersQty = ev => {
-    if(!/^[2-3]$/.test(ev.currentTarget.value))
+    if(!/^[2-8]$/.test(ev.currentTarget.value))
     {
         ev.currentTarget.value = 2;
     }
@@ -296,7 +296,7 @@ const handleInit = playerNum => {
 
 
 settingsButton.addEventListener('click', toggleSettings);
-playersQtyInput.addEventListener('input', changePlayersQty)
+playersQtyInput.addEventListener('change', changePlayersQty)
 velocityInput.addEventListener('input', changeVelocitySpanAndCache)
 newGameButton.addEventListener('click', newGame);
 gameCodeInput.addEventListener('keydown', onGameCodeKeyDown);
