@@ -79,7 +79,8 @@ body
     text-align: center;
 }
 
-#velocitySpan
+#velocitySpan,
+#foodQtySpan
 {
     text-decoration: underline;
     color: #0D6EFD;

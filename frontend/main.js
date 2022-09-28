@@ -1,4 +1,4 @@
-const socket = io('https://multiplayer---snake.herokuapp.com', {
+const socket = io('https://multiplayer---snake.herokuapp.com', { 
     widthCredentials: false,
 });
 
@@ -26,6 +26,8 @@ const settingsDiv = document.getElementById('settingsDiv');
 const gameEnterDiv = document.getElementById('gameEnterDiv');
 const velocityInput = document.getElementById('velocityInput');
 const velocitySpan = document.getElementById('velocitySpan');
+const foodQtyInput = document.getElementById('foodQtyInput');
+const foodQtySpan = document.getElementById('foodQtySpan');
 
 const bgColor = 'black';
 const snakeColors = [ 'blue', 'green', 'white', 'purple', 'yellow', 'pink', 'brown', 'orange' ];
@@ -47,12 +49,12 @@ const paintGame = state => {
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const food = state.food;
+    const foods = state.foods;
     const gridSize = state.gridSize;
     const size = canvas.width / gridSize;
 
     ctx.fillStyle = foodColor;
-    ctx.fillRect(food.x * size, food.y * size, size, size);
+    foods.forEach(food => ctx.fillRect(food.x * size, food.y * size, size, size))
 
     state.players.map((player, playerIndex) => paintPlayer(player, size, snakeColors[playerIndex]));
 };
@@ -140,16 +142,25 @@ const toggleSettings = () => {
     gameEnterDiv.style.display = gameEnterDivDisplay;
 };
 
-const setVelocityFromCache = () => {
+const setSettingsFromCache = () => {
     const frameRate = localStorage.frameRate || 7;
     velocitySpan.textContent = frameRate;
     velocityInput.value = frameRate;
+    const foodQty = localStorage.foodQty || 1;
+    foodQtySpan.textContent = foodQty;
+    foodQtyInput.value = foodQty;
 };
 
 const changeVelocitySpanAndCache = ev => {
     const value = ev.currentTarget.value;
     velocitySpan.textContent = value;
     localStorage.frameRate = value;
+};
+
+const changeFoodQtySpanAndCache = ev => {
+    const value = ev.currentTarget.value;
+    foodQtySpan.textContent = value;
+    localStorage.foodQty = value;
 };
 
 const createPlayAgainButtons = () => {
@@ -211,6 +222,7 @@ const newGame = () => {
     socket.emit('newGame', {
         playersQty: playersQtyInput.valueAsNumber,
         frameRate: velocityInput.valueAsNumber,
+        foodQty: foodQtyInput.valueAsNumber,
     });
     if(isMobile) document.body.requestFullscreen();
     init();
@@ -298,10 +310,11 @@ const handleInit = playerNum => {
 settingsButton.addEventListener('click', toggleSettings);
 playersQtyInput.addEventListener('change', changePlayersQty)
 velocityInput.addEventListener('input', changeVelocitySpanAndCache)
+foodQtyInput.addEventListener('input', changeFoodQtySpanAndCache)
 newGameButton.addEventListener('click', newGame);
 gameCodeInput.addEventListener('keydown', onGameCodeKeyDown);
 joinGameButton.addEventListener('click', joinGame);
-setVelocityFromCache();
+setSettingsFromCache();
 
 socket.on('init', handleInit);
 socket.on('unknownGame', handleUnknownGame);

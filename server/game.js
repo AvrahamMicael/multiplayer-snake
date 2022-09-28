@@ -148,29 +148,57 @@ const createGameState = ({ playersQty, frameRate }) => {
         players,
         gridSize,
         frameRate,
-        food: {},
+        foods: [],
     };
 };
 
-const randomFood = state => {
-    const food = {
+const randomFood = (state, foodEatenIndex = null, foodQtyOnCreate = 1) => {
+    const genFood = () => ({
         x: Math.floor( Math.random() * gridSize ),
         y: Math.floor( Math.random() * gridSize ),
-    };
-
-    for(const player of state.players)
+    });
+    
+    const newFoods = [];
+    const stateFoodQty = state.foods.length;
+    if(stateFoodQty == 0)
     {
-        for(const cell in player.snake)
+        for(let i = 0; i < foodQtyOnCreate; i++)
         {
-            if(cell.x == food.x 
-            && cell.y == food.y)
+            newFoods.push(genFood());
+        }
+    }
+    if(typeof foodEatenIndex == 'number')
+    {
+        state.foods.splice(foodEatenIndex, 1);
+        newFoods.push(...state.foods);
+        newFoods.push(genFood());
+    }
+
+    for(const [ foodIndex, food ] of newFoods.entries())
+    {
+        const newFoodsClone = newFoods.splice();
+        for(const otherFood of newFoodsClone.splice(foodIndex, 1))
+        {
+            if(otherFood.x == food.x
+            && otherFood.y == food.y)
             {
                 return randomFood(state);
             }
         }
+        for(const player of state.players)
+        {
+            for(const cell in player.snake)
+            {
+                if(cell.x == food.x 
+                && cell.y == food.y)
+                {
+                    return randomFood(state);
+                }
+            }
+        }
     }
 
-    state.food = food;
+    state.foods = newFoods;
 };
 
 const gameLoop = (state, io, roomName) => {
@@ -194,13 +222,17 @@ const gameLoop = (state, io, roomName) => {
             lost = true;
         }
 
-        if(state.food.x == player.pos.x
-        && state.food.y == player.pos.y)
+
+        for(const [ foodIndex, food ] of state.foods.entries())
         {
-            player.snake.push({ ...player.pos });
-            player.pos.x += player.vel.x;
-            player.pos.y += player.vel.y;
-            randomFood(state);
+            if(food.x == player.pos.x
+            && food.y == player.pos.y)
+            {
+                player.snake.push({ ...player.pos });
+                player.pos.x += player.vel.x;
+                player.pos.y += player.vel.y;
+                randomFood(state, foodIndex);
+            }
         }
         
         if(player.vel.x
@@ -307,7 +339,9 @@ const handleKeyDown = (key, client, states, clientRooms) => {
 
 const initGame = gameStateSettings => {
     const state = createGameState(gameStateSettings);
-    randomFood(state);
+    let { foodQty } = gameStateSettings;
+    if(typeof foodQty != 'number' || foodQty < 1 || foodQty > 10) foodQty = 1;
+    randomFood(state, null, foodQty);
     return state;
 };
 
@@ -353,7 +387,7 @@ const handleJoinGame = (gameCode, client, io, clientRooms, states) => {
 
 const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
     const roomName = clientRooms[client.id];
-    const { players, frameRate } = states[roomName];
+    const { players, frameRate, foods } = states[roomName];
 
     players[client.number - 1].playAgain = true;
     io.sockets.in(roomName).emit('playAgainMarked', playerNumber);
@@ -370,7 +404,11 @@ const handlePlayAgain = (client, states, clientRooms, io, playerNumber) => {
             {
                 clearInterval(intervalId);
                 io.sockets.in(roomName).emit('prepareToPlayAgain');
-                states[roomName] = initGame({ playersQty: players.length, frameRate });
+                states[roomName] = initGame({
+                    playersQty: players.length,
+                    foodQty: foods.length,
+                    frameRate,
+                });
                 startGameInterval(roomName, states, io);
             }
         }, 1000);
