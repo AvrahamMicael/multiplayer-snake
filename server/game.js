@@ -187,7 +187,7 @@ const randomFood = (state, foodEatenIndex = null, foodQtyOnCreate = 1) => {
         }
         for(const player of state.players)
         {
-            for(const cell in player.snake)
+            for(const cell of player.snake)
             {
                 if(cell.x == food.x 
                 && cell.y == food.y)
