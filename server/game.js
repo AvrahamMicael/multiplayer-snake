@@ -141,8 +141,8 @@ const getPlayers = playersQty => [
     ].slice(0, playersQty);
 
 const createGameState = ({ playersQty, frameRate }) => {
-    if(typeof frameRate != 'number' || frameRate < 1) frameRate = 7;
-    if(typeof playersQty != 'number' || playersQty < 2 || playersQty > 8) playersQty = 2;
+    if(typeof frameRate != 'number' || frameRate < 1) frameRate = 4;
+    if(typeof playersQty != 'number' || playersQty < 2 || playersQty > 8 || Math.floor(playersQty) != playersQty) playersQty = 2;
     const players = getPlayers(playersQty);
     return {
         players,
