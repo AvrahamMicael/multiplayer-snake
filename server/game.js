@@ -176,7 +176,7 @@ const randomFood = (state, foodEatenIndex = null, foodQtyOnCreate = 1) => {
 
     for(const [ foodIndex, food ] of newFoods.entries())
     {
-        const newFoodsClone = newFoods.splice();
+        const newFoodsClone = JSON.parse(JSON.stringify(newFoods));
         for(const otherFood of newFoodsClone.splice(foodIndex, 1))
         {
             if(otherFood.x == food.x
