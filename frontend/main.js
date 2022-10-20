@@ -143,7 +143,7 @@ const toggleSettings = () => {
 };
 
 const setSettingsFromCache = () => {
-    const frameRate = localStorage.frameRate || 7;
+    const frameRate = localStorage.frameRate || 4;
     velocitySpan.textContent = frameRate;
     velocityInput.value = frameRate;
     const foodQty = localStorage.foodQty || 1;
