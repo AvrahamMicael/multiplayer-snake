@@ -1,0 +1,8 @@
+#velocitySpan,
+#foodQtySpan
+{
+    @extend #{
+        '.text-decoration-underline',
+        '.text-primary',
+    };
+}

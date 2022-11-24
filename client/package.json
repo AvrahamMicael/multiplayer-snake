@@ -5,12 +5,14 @@
   "scripts": {
     "dev": "live-server public --port=3000",
     "preview": "live-server dist --port=5000",
+    "sass": "node-sass scss/app.scss public/style.css",
     "minify:html": "html-minifier-terser -c html-minifier-terser.config.json --file-ext html --input-dir dist --output-dir dist -o index.html",
     "minify:svg": "html-minifier-terser -c html-minifier-terser.config.json --file-ext svg --input-dir dist --output-dir dist -o favicon.svg",
     "minify:css": "cleancss dist/style.css -c ie7 -o dist/style.css",
     "minify:js": "uglifyjs dist/main.js --ie --webkit -m -c -o dist/main.js",
     "minify": "npm run minify:html && npm run minify:svg && npm run minify:css && npm run minify:js",
-    "build": "babel ./public -d ./dist --copy-files --delete-dir-on-start && npm run minify",
+    "babel": "babel ./public -d ./dist --copy-files --delete-dir-on-start",
+    "build": "npm run sass && npm run babel && npm run minify",
     "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
   },
   "devDependencies": {
@@ -20,7 +22,11 @@
     "clean-css-cli": "^5.6.1",
     "html-minifier-terser": "^7.1.0",
     "live-server": "^1.2.2",
+    "node-sass": "^8.0.0",
     "push-dir": "^0.4.1",
     "uglify-js": "^3.17.4"
+  },
+  "dependencies": {
+    "bootstrap": "^5.2.3"
   }
 }

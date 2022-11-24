@@ -1,0 +1,10 @@
+#settingsDiv
+{
+    display: none;
+}
+
+#playAgainButtonsDiv,
+#gameEnterDiv
+{
+    @extend .text-center;
+}

@@ -127,16 +127,10 @@ const createPlayAgainListItem = playerNumber => {
     playAgainList.appendChild(li);
 };
 
-const playAgainButtonOnClick = () => {
-    socket.emit('playAgain', playerNumber);
-};
-
-const dontPlayaAgainButtonOnClick = () => {
-    socket.emit('dontPlayAgain', playerNumber);
-};
+const getElementComputedStyleDisplay = element => window.getComputedStyle(element).getPropertyValue('display');
 
 const toggleSettings = () => {
-    const [ settingsDivDisplay, gameEnterDivDisplay ] = settingsDiv.style.display == 'none'
+    const [ settingsDivDisplay, gameEnterDivDisplay ] = getElementComputedStyleDisplay(settingsDiv) == 'none'
         ? [ 'block', 'none' ]
         : [ 'none', 'block' ];
     settingsDiv.style.display = settingsDivDisplay;

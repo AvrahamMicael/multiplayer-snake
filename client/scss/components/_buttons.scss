@@ -1,0 +1,15 @@
+#settingsButton
+{
+    @extend #{
+        '.position-absolute',
+        '.border-0',
+        '.top-0',
+        '.text-info',
+    };
+    width: 10px;
+    height: 10px;
+    right: -6px;
+    outline: none;
+    background-color: transparent;
+    font-size: 10px;
+}

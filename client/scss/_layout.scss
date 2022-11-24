@@ -1,0 +1,21 @@
+body
+{
+    overflow: hidden;
+}
+
+main
+{
+    @extend #{
+        '.vh-100',
+        '.container',
+        '.d-flex',
+        '.justify-content-center',
+        '.align-items-center',
+    };
+}
+
+:fullscreen,
+::backdrop
+{
+    background-color: rgba(255,255,255,0);
+}
