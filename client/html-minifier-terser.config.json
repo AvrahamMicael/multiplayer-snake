@@ -1,0 +1,15 @@
+{
+  "collapseInlineTagWhitespace": true,
+  "collapseWhitespace": true,
+  "removeComments": true,
+  "removeRedundantAttributes": true,
+  "removeEmptyAttributes": true,
+  "useShortDoctype": true,
+  "minifyCSS": true,
+  "minifyJS": true,
+  "minifyURLS": true,
+  "noNewlinesBeforeTagClose": true,
+  "removeAttributeQuotes": true,
+  "sortAttributes": true,
+  "sortClassName": true
+}

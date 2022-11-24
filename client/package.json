@@ -1,0 +1,25 @@
+{
+  "name": "multiplayer-snake-client",
+  "version": "1.0.0",
+  "license": "ISC",
+  "scripts": {
+    "dev": "live-server public --port=3000",
+    "preview": "live-server dist --port=5000",
+    "minify:html": "html-minifier-terser -c html-minifier-terser.config.json --file-ext html --input-dir dist --output-dir dist -o index.html",
+    "minify:svg": "html-minifier-terser -c html-minifier-terser.config.json --file-ext svg --input-dir dist --output-dir dist -o favicon.svg",
+    "minify:css": "cleancss dist/style.css -c ie7 -o dist/style.css",
+    "minify:js": "uglifyjs dist/main.js --ie --webkit -m -c -o dist/main.js",
+    "minify": "npm run minify:html && npm run minify:svg && npm run minify:css && npm run minify:js",
+    "build": "babel ./public -d ./dist --copy-files --delete-dir-on-start && npm run minify",
+    "deploy": "push-dir --dir=dist --branch=gh-pages --cleanup"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.20.2",
+    "@babel/preset-env": "^7.20.2",
+    "clean-css-cli": "^5.6.1",
+    "html-minifier-terser": "^7.1.0",
+    "live-server": "^1.2.2",
+    "uglify-js": "^3.17.4"
+  }
+}
