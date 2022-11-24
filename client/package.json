@@ -20,6 +20,7 @@
     "clean-css-cli": "^5.6.1",
     "html-minifier-terser": "^7.1.0",
     "live-server": "^1.2.2",
+    "push-dir": "^0.4.1",
     "uglify-js": "^3.17.4"
   }
 }
