@@ -9,7 +9,6 @@
   "minifyJS": true,
   "minifyURLS": true,
   "noNewlinesBeforeTagClose": true,
-  "removeAttributeQuotes": true,
   "sortAttributes": true,
   "sortClassName": true
 }
